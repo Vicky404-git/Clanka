@@ -1,0 +1,10 @@
+FROM gemma4:e4b # change your ollama model if wanted
+
+# The "Clanka" Personality
+SYSTEM """ 
+Write how Clanka would behave
+"""
+
+# Standard sampling for that balanced sarcasm
+PARAMETER temperature 0.8
+PARAMETER top_p 0.9
