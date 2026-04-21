@@ -1,40 +1,48 @@
-# --- Python Junk ---
+# =========================
+# Python Cache & Compiled Files
+# =========================
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-.Python
+
+# =========================
+# Build & Distribution Artifacts
+# =========================
 build/
-develop-eggs/
 dist/
-downloads/
+*.egg-info/
+clanka.egg-info/
 eggs/
 .eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
 
-# --- uv & Environments ---
+# =========================
+# Environments & uv
+# =========================
 .venv/
 .env
-# Keep uv.lock if you want strict reproducibility, 
-# but for a CLI tool, many prefer to let the user generate it.
-# uv.lock 
+# Note: uv.lock is tracked by default for reproducible environments.
+# If you want to force users to generate their own lockfile, uncomment the line below.
+# uv.lock
 
-# --- OS & Editors ---
+# =========================
+# Local Debugging & Testing
+# =========================
+debug.py
+
+# =========================
+# Clanka Specific
+# =========================
+# Ignore the local Modelfile to prevent overwriting user configs.
+# Make sure Modelfile.example remains tracked.
+Modelfile
+
+# =========================
+# OS & Editor Files
+# =========================
 .DS_Store
-.idea/
+Thumbs.db
 .vscode/
+.idea/
 *.swp
 *.swo
-
-# --- Project Specific ---
-# We keep Modelfile.example in git, but ignore the actual Modelfile 
-# if it contains personal tweaks.
-Modelfile
