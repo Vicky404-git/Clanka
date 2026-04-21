@@ -1,4 +1,6 @@
 import os
+import sys
+import re
 import platform
 import psutil
 import ollama
@@ -20,6 +22,8 @@ LOGO = r"""
  \____|_____/_/   \_\_| \_|_|\_/_/   \_\ [/bold cyan]
  [dim italic]Your Terminal Homie | vicky-404 edition[/dim italic]
 """
+
+
 
 # =========================
 # SYSTEM INFO
@@ -82,9 +86,13 @@ USER:
         console.print(f"[bold red]Ollama API Error:[/bold red] {e}")
     except Exception as e:
         console.print(f"[bold red]Unexpected Error:[/bold red] {e}")
+
+
+
 # =========================
 # WTF MODE
 # =========================
+
 def handle_wtf(target=None):
     console.print(LOGO)
 
@@ -162,3 +170,156 @@ Explain:
 
         except Exception as e:
             console.print(f"[bold red]Error reading directory:[/bold red] {e}")
+
+
+
+# =========================
+# FIX MODE
+# =========================
+
+#def handle_fix(target=None):
+#    console.print(LOGO)
+#
+#    try:
+        # =========================
+        # 📄 FILE INPUT
+        # =========================
+#        if target:
+#            file_path = Path(target)
+#
+#            if not file_path.exists():
+#                console.print(f"[bold red]Error:[/bold red] File not found: {target}")
+#                return
+#
+#            error_content = file_path.read_text(errors="ignore")[:MAX_FILE_CHARS]
+
+        # =========================
+        # 🔌 PIPE INPUT
+        # =========================
+#        else:
+#            if not os.isatty(0):
+#                error_content = sys.stdin.read()[:MAX_FILE_CHARS]
+#            else:
+#                console.print("[bold red]No input provided.[/bold red]")
+#                return
+
+        # =========================
+        # 🧠 LOCAL ERROR CHECKS (NEW)
+        # =========================
+
+#        if not error_content.strip():
+#            console.print("[bold red]No error content detected.[/bold red]")
+#            return
+
+        # 🚨 Case 1: File not found
+#        if "No such file or directory" in error_content:
+#            console.print("[bold red]File not found error detected.[/bold red]")
+#            console.print("[yellow]Fix:[/yellow] Check filename or path using `ls`")
+#            return
+
+        # 🚨 Case 2: Module not found
+#        if "ModuleNotFoundError" in error_content:
+#            console.print("[bold red]Missing Python module detected.[/bold red]")
+#            console.print("[yellow]Fix:[/yellow] Install using `pip install <module>`")
+#            return
+
+        # 🚨 Case 3: Syntax error
+#        if "SyntaxError" in error_content:
+#            console.print("[bold red]Syntax error detected.[/bold red]")
+#            console.print("[yellow]Fix:[/yellow] Check your code formatting or indentation")
+#            return
+
+        # =========================
+        # 🤖 FALLBACK TO AI
+        # =========================
+#       console.print("[dim]Analyzing error with AI...[/dim]\n")
+#
+#        prompt = f"""You are an expert debugger.
+#
+#Analyze this error:
+#
+#{error_content}
+
+#Return:
+#- Explanation
+#- Root cause
+#- Fix
+#"""
+#
+#        stream_response(prompt, quiet=True)
+#
+#    except Exception as e:
+#       console.print(f"[bold red]Unexpected failure:[/bold red] {e}")
+#
+
+
+
+# =========================
+# PATCH MODE
+# =========================
+
+def extract_code(text: str) -> str:
+    # Extract code inside ```python ... ```
+    matches = re.findall(r"```(?:python)?\n(.*?)```", text, re.DOTALL)
+
+    if matches:
+        return matches[0].strip()
+
+    # fallback: remove backticks if model didn't format properly
+    text = text.replace("```", "")
+    return text.strip()
+
+
+def handle_patch(target):
+    console.print(LOGO)
+
+    path = Path(target)
+
+    if not path.exists():
+        console.print(f"[bold red]File not found:[/bold red] {target}")
+        return
+
+    try:
+        content = path.read_text(errors="ignore")[:MAX_FILE_CHARS]
+
+        console.print(f"[dim]Generating improved version of {target}...[/dim]\n")
+
+        prompt = f"""You are a senior Python engineer.
+
+Refactor the following code.
+
+STRICT RULES:
+- Output ONLY valid Python code
+- Do NOT include explanations
+- Do NOT include markdown
+- Do NOT include backticks
+- Code must be runnable
+
+Code:
+{content}
+"""
+
+        response = ""
+        stream = ollama.generate(model=MODEL_NAME, prompt=prompt, stream=True)
+
+        for chunk in stream:
+            response += chunk.get("response", "")
+
+        clean_code = extract_code(response)
+
+        # 🔥 VALIDATE BEFORE SAVING
+        try:
+            compile(clean_code, "<string>", "exec")
+        except SyntaxError as e:
+            console.print("[bold red]Generated code is invalid.[/bold red]")
+            console.print(f"[dim]{e}[/dim]")
+            return
+
+        # ✅ SAVE ONLY IF VALID
+        new_file = path.with_name(f"{path.stem}_fixed{path.suffix}")
+        new_file.write_text(clean_code)
+
+        console.print(f"[bold green]Saved fixed version:[/bold green] {new_file}")
+
+    except Exception as e:
+        console.print(f"[bold red]Error:[/bold red] {e}")
