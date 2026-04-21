@@ -259,15 +259,27 @@ Explain:
 # =========================
 
 def extract_code(text: str) -> str:
-    # Extract code inside ```python ... ```
-    matches = re.findall(r"```(?:python)?\n(.*?)```", text, re.DOTALL)
+    
 
+    # Prefer fenced code blocks
+    matches = re.findall(r"```(?:python)?\n(.*?)```", text, re.DOTALL)
     if matches:
         return matches[0].strip()
 
-    # fallback: remove backticks if model didn't format properly
+    # Remove markdown artifacts
+    text = re.sub(r"^```.*?\n", "", text, flags=re.MULTILINE)
     text = text.replace("```", "")
-    return text.strip()
+
+    # Remove obvious non-code lines (very important)
+    lines = text.splitlines()
+    cleaned = []
+
+    for line in lines:
+        if line.strip().startswith(("#", "//", "[", "`")):
+            continue
+        cleaned.append(line)
+
+    return "\n".join(cleaned).strip()
 
 
 def handle_patch(target):
@@ -278,6 +290,13 @@ def handle_patch(target):
     if not path.exists():
         console.print(f"[bold red]File not found:[/bold red] {target}")
         return
+
+    def generate_code(prompt):
+        response = ""
+        stream = ollama.generate(model=MODEL_NAME, prompt=prompt, stream=True)
+        for chunk in stream:
+            response += chunk.get("response", "")
+        return response
 
     try:
         content = path.read_text(errors="ignore")[:MAX_FILE_CHARS]
@@ -290,32 +309,45 @@ Refactor the following code.
 
 STRICT RULES:
 - Output ONLY valid Python code
-- Do NOT include explanations
-- Do NOT include markdown
-- Do NOT include backticks
-- Code must be runnable
+- No explanations
+- No markdown
+- No backticks
 
 Code:
 {content}
 """
 
-        response = ""
-        stream = ollama.generate(model=MODEL_NAME, prompt=prompt, stream=True)
-
-        for chunk in stream:
-            response += chunk.get("response", "")
-
+        # 🔁 First attempt
+        response = generate_code(prompt)
         clean_code = extract_code(response)
 
-        # 🔥 VALIDATE BEFORE SAVING
         try:
             compile(clean_code, "<string>", "exec")
-        except SyntaxError as e:
-            console.print("[bold red]Generated code is invalid.[/bold red]")
-            console.print(f"[dim]{e}[/dim]")
-            return
 
-        # ✅ SAVE ONLY IF VALID
+        except SyntaxError:
+            console.print("[yellow]Retrying with stricter prompt...[/yellow]")
+
+            strict_prompt = f"""Return ONLY valid Python code.
+
+NO text.
+NO explanation.
+ONLY code.
+
+Code:
+{content}
+"""
+
+            response = generate_code(strict_prompt)
+            clean_code = extract_code(response)
+
+            try:
+                compile(clean_code, "<string>", "exec")
+            except SyntaxError as e:
+                console.print("[bold red]Failed again. Model output unusable.[/bold red]")
+                console.print(f"[dim]{e}[/dim]")
+                return
+
+        # ✅ SAVE AFTER VALIDATION
         new_file = path.with_name(f"{path.stem}_fixed{path.suffix}")
         new_file.write_text(clean_code)
 
@@ -323,3 +355,5 @@ Code:
 
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
+
+
