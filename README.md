@@ -1,153 +1,118 @@
-# ⚡ Clanka — Your Terminal Debugging Engine
+# 🧪 Clanka
 
-> Not a chatbot. Not a notes app.
-> **Clanka is a developer reflex system.**
+> A terminal playground for experimenting with local AI (Ollama + Gemma)
 
-Clanka is a **terminal-native AI assistant** built for developers who want fast, local, no-BS debugging and code analysis.
-
-It reads your code.
-It understands your system.
-It fixes your mistakes.
+Clanka is a lightweight CLI tool for interacting with local language models directly from your terminal.
+It’s built for fast experimentation, not production workflows.
 
 ---
 
-## 🚀 Core Idea
+## ⚡ What is Clanka?
 
-Most AI tools sit in a browser.
+Clanka is:
 
-Clanka lives where you actually work:
+* a **local AI sandbox**
+* a **file-aware prompt runner**
+* a **terminal UI experiment**
 
-> **your terminal**
+Clanka is NOT:
 
-It turns your CLI into a:
-
-* code analyzer
-* debugger
-* refactoring engine
-* real-time AI assistant
+* a full developer tool
+* a polished product
+* a replacement for IDEs
 
 ---
 
-## ⚡ Features
+## 🚀 Features
 
-### 🔍 `wtf` — Code & Project Analysis
+### 💬 Chat with Local Models
+
+```bash
+clanka "explain this code"
+```
+
+* Runs locally via Ollama
+* Streams responses in real-time
+* No API keys, no cloud
+
+---
+
+### 📂 File-Aware AI
 
 ```bash
 clanka wtf script.py
 clanka wtf
 ```
 
-* Explains code
-* Finds bugs & bad patterns
-* Analyzes full project structure
-* Reads README + files for context
+* Reads files from your system
+* Understands project structure
+* Uses README + file context
 
 ---
 
-### 🛠 `patch` — Safe Refactoring
+### 🎨 Terminal UI
 
-```bash
-clanka patch script.py
-```
-
-* Generates improved version
-* Saves as `*_fixed.py`
-* Never overwrites original file
-* Ensures valid Python output
+* Built with `rich`
+* Live streaming output
+* Markdown rendering
+* Clean panel-based display
 
 ---
 
-### 🧠 `debug` — Preflight Diagnostics
+### 🧠 System Context Injection
 
-```bash
-clanka debug
-```
-
-Checks your environment:
-
-* Python version
-* Dependencies
-* Ollama status
-* Model availability
-* Inference speed
-* File system permissions
-* CLI availability
-
----
-
-### 💬 Direct AI Mode
-
-```bash
-clanka "optimize this logic"
-```
-
-* Streams response in real-time
-* Markdown-rendered output
-* System-aware responses (CPU, RAM, OS)
-
----
-
-## ⚙️ Tech Stack
-
-* **Python**
-* **Ollama** (local LLM)
-* **rich** (terminal UI)
-* **psutil** (system awareness)
-* **pathlib / os** (file handling)
-
----
-
-## 🧠 How It Works
-
-Clanka injects **system context** into every prompt:
+Clanka automatically includes:
 
 * OS
 * CPU
 * RAM
 
-Then combines it with:
-
-* your code
-* your files
-* your command
-
-Result:
-
-> grounded, context-aware responses
+So responses are grounded in your environment.
 
 ---
 
-## 🏗 Project Structure
+### 🧪 Debug Mode
 
+```bash
+clanka debug
 ```
-clanka.py      → core engine (AI + logic)
-main.py        → CLI router
-debug.py       → environment diagnostics
-Modelfile      → Ollama model config
-README.md      → docs
-```
+
+Checks:
+
+* Python version
+* Dependencies
+* Ollama status
+* Model availability
+* Inference working
+* File system access
+
+---
+
+## ⚙️ Tech Stack
+
+* Python
+* Ollama
+* Gemma (or any local model)
+* rich
+* psutil
 
 ---
 
 ## 🛠 Installation
 
-### 1. Clone repo
-
 ```bash
 git clone https://github.com/Vicky404-git/Clanka.git
 cd Clanka
-```
-
-### 2. Install dependencies
-
-```bash
 pip install -e .
 ```
 
-### 3. Setup Ollama
+---
+
+## 🧠 Setup Model
 
 ```bash
 ollama create clanka -f Modelfile
+ollama list
 ```
 
 ---
@@ -155,68 +120,50 @@ ollama create clanka -f Modelfile
 ## ▶️ Usage
 
 ```bash
+clanka "your prompt"
 clanka wtf file.py
-clanka patch file.py
+clanka wtf
 clanka debug
-clanka "explain this error"
 ```
 
 ---
 
-## ⚠️ Philosophy
+## 📁 Structure
 
-Clanka is **not**:
-
-* a notes app
-* a knowledge system
-* a life tracker
-
-That’s what Sōzō is for.
-
----
-
-Clanka is:
-
-> ⚡ fast
-> ⚡ local
-> ⚡ brutal
-> ⚡ developer-first
+```
+clanka.py      # core logic
+main.py        # CLI entry
+debug.py       # diagnostics
+Modelfile      # model config
+```
 
 ---
 
-## 🧨 Design Principles
+## 🔮 Future Ideas (Experimental)
 
-* No GUI bloat
-* No cloud dependency
-* No silent file overwrites
-* Always show what changed
-* Fail fast, explain clearly
-
----
-
-## 🔥 Roadmap
-
-* `reflex` → run + debug in one command
-* multi-file patching
-* smarter error detection (no AI needed)
-* faster inference mode
-* plugin system
+* Image input (Gemma multimodal)
+* Video frame analysis
+* Better file context handling
+* Faster streaming modes
 
 ---
 
 ## 👤 Author
 
-**Vicky404**
-
-GitHub: https://github.com/Vicky404-git
+Vicky404
+https://github.com/Vicky404-git
 
 ---
 
-## 💀 Final Note
+## 🧨 Note
 
-Clanka doesn’t try to be friendly.
+Clanka is an experiment.
 
-It tries to be:
+It’s built to explore:
 
-> **useful.**
+* local LLMs
+* terminal interfaces
+* file-aware AI
+
+If it breaks, that’s part of the process.
 
