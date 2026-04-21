@@ -9,7 +9,8 @@ from rich.live import Live
 from rich.panel import Panel
 
 console = Console()
-
+MODEL_NAME = os.getenv("CLANKA_MODEL", "clanka")
+MAX_FILE_CHARS = 4000
 LOGO = r"""
  [bold cyan]
   ____ _        _    _   _ _  __   _    
@@ -24,50 +25,63 @@ LOGO = r"""
 # SYSTEM INFO
 # =========================
 def get_sys_info():
-    mem = psutil.virtual_memory()
-    return f"OS: {platform.system()} {platform.release()}, CPU: {platform.processor()}, RAM: {round(mem.total / (1024**3), 2)}GB"
+    try:
+        mem = psutil.virtual_memory()
+        return f"OS: {platform.system()} {platform.release()}, CPU: {platform.processor()}, RAM: {round(mem.total / (1024**3), 2)}GB"
+    except Exception:
+        return "System info unavailable"
 
 # =========================
 # STREAM RESPONSE
 # =========================
 def stream_response(prompt, quiet=False):
-    """Streams the LLM response to a rich markdown panel."""
     if not quiet:
         console.print(LOGO)
-    
+
     sys_context = get_sys_info()
-    enriched_prompt = f"[SYSTEM_CONTEXT: {sys_context}] User prompt: {prompt}"
+    enriched_prompt = f"""SYSTEM CONTEXT:
+{sys_context}
+
+USER:
+{prompt}
+"""
 
     try:
         stream = ollama.generate(
-            model='clanka', 
-            prompt=enriched_prompt, 
+            model=MODEL_NAME,
+            prompt=enriched_prompt,
             stream=True
         )
-        
-        # Initialize an empty panel first to anchor the UI
+
         initial_panel = Panel(
-            Markdown("..."), 
-            title="[bold green]clanka[/bold green]", 
-            border_style="cyan", 
+            Markdown("..."),
+            title=f"[bold green]{MODEL_NAME}[/bold green]",
+            border_style="cyan",
             padding=(1, 2)
         )
-        
-        # Dropped vertical_overflow and lowered refresh rate to 8 to stop flickering
+
         with Live(initial_panel, console=console, refresh_per_second=8) as live:
             full_response = ""
+
             for chunk in stream:
-                full_response += chunk['response']
+                if "response" not in chunk:
+                    continue  # safety
+
+                full_response += chunk["response"]
+
                 live.update(
                     Panel(
-                        Markdown(full_response), 
-                        title="[bold green]clanka[/bold green]", 
-                        border_style="cyan", 
+                        Markdown(full_response),
+                        title=f"[bold green]{MODEL_NAME}[/bold green]",
+                        border_style="cyan",
                         padding=(1, 2)
                     )
                 )
+
+    except ollama.ResponseError as e:
+        console.print(f"[bold red]Ollama API Error:[/bold red] {e}")
     except Exception as e:
-        console.print(f"[bold red]Error:[/bold red] Is Ollama running? {e}")
+        console.print(f"[bold red]Unexpected Error:[/bold red] {e}")
 # =========================
 # WTF MODE
 # =========================
@@ -80,19 +94,21 @@ def handle_wtf(target=None):
 
         if file_path.is_file():
             try:
-                content = file_path.read_text(errors='ignore')
+                content = file_path.read_text(errors='ignore')[:MAX_FILE_CHARS]
 
                 console.print(f"[dim]Analyzing file: {target}...[/dim]\n")
 
                 prompt = f"""Read this file ({target}) and explain what it does.
-Be concise, technical, and point out issues or bad patterns.
+                Be concise, technical, and point out issues or bad patterns.
 
-File Content:
-{content[:4000]}
-"""
+                File Content:{content}"""
 
                 stream_response(prompt, quiet=True)
 
+            except FileNotFoundError:
+                console.print(f"[bold red]File not found:[/bold red] {target}")
+            except PermissionError:
+                console.print(f"[bold red]Permission denied:[/bold red] {target}")
             except Exception as e:
                 console.print(f"[bold red]Error reading file:[/bold red] {e}")
 
@@ -106,13 +122,16 @@ File Content:
             
             # Filter out hidden files/folders and massive dependency directories
             ignore_dirs = {'.git', '.venv', 'node_modules', '__pycache__', '.idea'}
-            valid_files = [
-                f.name for f in cwd.iterdir() 
-                if f.name not in ignore_dirs and not f.name.startswith('.')
-            ]
+            valid_files = []
+            for f in cwd.iterdir():
+                try:
+                    if f.name not in ignore_dirs and not f.name.startswith('.'):
+                        valid_files.append(f.name)
+                except PermissionError:
+                    continue 
             
             # Limit to top 30 files to protect the context window
-            files_str = ", ".join(valid_files[:30])
+            files_str = ", ".join(valid_files[:30])[:1000]
             if len(valid_files) > 30:
                 files_str += f"... and {len(valid_files) - 30} more."
 
