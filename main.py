@@ -1,29 +1,31 @@
 import sys
+import subprocess
+from core.clanka import stream_response, handle_wtf, handle_patch
 import os
-from clanka import stream_response, handle_wtf, handle_patch
+
+BASE = os.path.dirname(__file__)
+
 def run():
     args = sys.argv[1:]
-    
+
     if not args:
-        print("Usage: clanka 'message' OR clanka wtf [file]")
+        print("Usage: clanka 'msg' | clanka wtf [file] | clanka patch file.py")
         return
 
-    
-    command = args[0].lower()
-    
-    if command == "wtf":
-        if len(args) > 1:
-            handle_wtf(args[1])
-        else:
-            handle_wtf()
+    cmd = args[0].lower()
 
-    elif command == "patch":
+    if cmd == "wtf":
+        handle_wtf(args[1] if len(args) > 1 else None)
+
+    elif cmd == "patch":
         if len(args) > 1:
             handle_patch(args[1])
         else:
             print("Usage: clanka patch file.py")
-    elif command == "debug":
-        os.system("python3 debug.py")
+
+    elif cmd == "debug":
+        subprocess.run(["python3", os.path.join(BASE, "core/debug.py")])
+
     else:
         stream_response(" ".join(args))
 

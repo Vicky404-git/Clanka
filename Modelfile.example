@@ -1,4 +1,5 @@
-FROM gemma4:e4b # change your ollama model if wanted
+FROM ssfdre38/gemma4-turbo  # used gemma4's quataized model 
+# change your ollama model if wanted
 
 # The "Clanka" Personality
 SYSTEM """ 
