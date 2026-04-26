@@ -1,29 +1,29 @@
-# 🧪 Clanka
+# ⚡ Clanka
 
-> A terminal playground for experimenting with local AI (Ollama + Gemma)
+> Terminal-native AI assistant with local inference, clean TUI, and evolving RAG
 
-Clanka is a lightweight CLI tool for interacting with local language models directly from your terminal.
-It’s built for fast experimentation, not production workflows.
+Clanka is a fast, offline-first CLI tool for interacting with local LLMs using Ollama — built for developers who prefer terminal workflows over bloated GUIs.
 
 ---
 
-## ⚡ What is Clanka?
+## 🚀 What is Clanka?
 
 Clanka is:
 
-* a **local AI sandbox**
-* a **file-aware prompt runner**
-* a **terminal UI experiment**
+* 🧠 a **local AI assistant**
+* ⚡ a **low-latency CLI interface**
+* 📂 a **code-aware analyzer**
+* 🎨 a **terminal-native UI experiment (but actually usable)**
 
 Clanka is NOT:
 
-* a full developer tool
-* a polished product
-* a replacement for IDEs
+* ❌ cloud-dependent
+* ❌ a heavy framework
+* ❌ an IDE replacement
 
 ---
 
-## 🚀 Features
+## ⚡ Features
 
 ### 💬 Chat with Local Models
 
@@ -31,43 +31,43 @@ Clanka is NOT:
 clanka "explain this code"
 ```
 
-* Runs locally via Ollama
-* Streams responses in real-time
-* No API keys, no cloud
+* Runs fully local (via Ollama)
+* No API keys
+* Streaming responses
 
 ---
 
-### 📂 File-Aware AI
+### 📂 File / Project Awareness
 
 ```bash
-clanka wtf script.py
+clanka wtf file.py
 clanka wtf
 ```
 
-* Reads files from your system
-* Understands project structure
-* Uses README + file context
+* Reads files directly
+* Understands directory structure
+* Uses README context when available
+
+---
+
+### 🛠 Patch Mode (Safe Refactor)
+
+```bash
+clanka patch file.py
+```
+
+* Refactors code using AI
+* **Never overwrites original file**
+* Creates: `file_fixed.py`
 
 ---
 
 ### 🎨 Terminal UI
 
 * Built with `rich`
-* Live streaming output
 * Markdown rendering
-* Clean panel-based display
-
----
-
-### 🧠 System Context Injection
-
-Clanka automatically includes:
-
-* OS
-* CPU
-* RAM
-
-So responses are grounded in your environment.
+* Live streaming panels
+* Optimized updates (less flicker, less CPU waste)
 
 ---
 
@@ -81,10 +81,10 @@ Checks:
 
 * Python version
 * Dependencies
-* Ollama status
+* Ollama daemon
 * Model availability
 * Inference working
-* File system access
+* File system permissions
 
 ---
 
@@ -92,13 +92,13 @@ Checks:
 
 * Python
 * Ollama
-* Gemma (or any local model)
-* rich
+* Local LLMs (Gemma etc.)
+* rich (TUI)
 * psutil
 
 ---
 
-## 🛠 Installation
+## 📦 Installation
 
 ```bash
 git clone https://github.com/Vicky404-git/Clanka.git
@@ -108,7 +108,7 @@ pip install -e .
 
 ---
 
-## 🧠 Setup Model
+## 🧠 Model Setup
 
 ```bash
 ollama create clanka -f Modelfile
@@ -123,27 +123,47 @@ ollama list
 clanka "your prompt"
 clanka wtf file.py
 clanka wtf
+clanka patch file.py
 clanka debug
 ```
 
 ---
 
-## 📁 Structure
+## 📁 Project Structure
 
 ```
-clanka.py      # core logic
-main.py        # CLI entry
-debug.py       # diagnostics
-Modelfile      # model config
+core/
+  ├── clanka.py     # core engine + UI
+  ├── debug.py      # diagnostics
+
+memory/
+  └── clanka_memory.json  # (future RAG storage)
+
+main.py             # CLI entrypoint
+Modelfile           # model config
 ```
 
 ---
 
-## 🔮 Future Ideas (Experimental)
+## ⚠️ Performance Note
 
-* Image input (Gemma multimodal)
-* Video frame analysis
-* Better file context handling
+If upgrading from older versions:
+
+```bash
+ollama rm gemma4:e4b
+ollama rm clanka
+ollama create clanka -f Modelfile
+```
+
+Prevents stale model weights slowing down inference.
+
+---
+
+## 🔮 Roadmap
+
+* Persistent memory (RAG)
+* Multi-persona system (linux / coding / AI / trading)
+* Better context chunking
 * Faster streaming modes
 
 ---
@@ -155,15 +175,19 @@ https://github.com/Vicky404-git
 
 ---
 
+## 🧠 Philosophy
+
+Clanka focuses on:
+
+* local-first AI
+* minimal dependencies
+* terminal workflows
+* fast iteration
+
+---
+
 ## 🧨 Note
 
-Clanka is an experiment.
+Clanka is evolving.
 
-It’s built to explore:
-
-* local LLMs
-* terminal interfaces
-* file-aware AI
-
-If it breaks, that’s part of the process.
-
+Not perfect yet — but getting fast, usable, and actually practical.
