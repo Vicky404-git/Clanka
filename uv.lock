@@ -48,6 +48,7 @@ dependencies = [
     { name = "ollama" },
     { name = "psutil" },
     { name = "rich" },
+    { name = "sqlite-vss" },
 ]
 
 [package.metadata]
@@ -56,6 +57,7 @@ requires-dist = [
     { name = "ollama", specifier = ">=0.1.8" },
     { name = "psutil", specifier = ">=5.9.0" },
     { name = "rich", specifier = ">=13.0.0" },
+    { name = "sqlite-vss", specifier = ">=0.1.2" },
 ]
 
 [[package]]
@@ -476,6 +478,16 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c0/8f/0722ca900cc807c13a6a0c696dacf35430f72e0ec571c4275d2371fca3e9/rich-15.0.0.tar.gz", hash = "sha256:edd07a4824c6b40189fb7ac9bc4c52536e9780fbbfbddf6f1e2502c31b068c36", size = 230680, upload-time = "2026-04-12T08:24:00.75Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/82/3b/64d4899d73f91ba49a8c18a8ff3f0ea8f1c1d75481760df8c68ef5235bf5/rich-15.0.0-py3-none-any.whl", hash = "sha256:33bd4ef74232fb73fe9279a257718407f169c09b78a87ad3d296f548e27de0bb", size = 310654, upload-time = "2026-04-12T08:24:02.83Z" },
+]
+
+[[package]]
+name = "sqlite-vss"
+version = "0.1.2"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/68/f7/df3bde9cd7409bb827fa90bec8e1f99b7459e76f2ddd446506cc2319c199/sqlite_vss-0.1.2-py3-none-macosx_10_6_x86_64.whl", hash = "sha256:9eefa4207f8b522e32b2747fce44422c773e36710bf807613795218c7ba125f0", size = 1684060, upload-time = "2023-08-06T02:38:46.103Z" },
+    { url = "https://files.pythonhosted.org/packages/aa/28/bd9a9c3aa2841755ce0196137daa386966e2b4ad65f6806edb18fcdf33cf/sqlite_vss-0.1.2-py3-none-macosx_11_0_arm64.whl", hash = "sha256:84994eaf7fe700218b258422358c4536a6aca39b96026c308b28630967f954c4", size = 1330091, upload-time = "2023-08-06T02:38:47.923Z" },
+    { url = "https://files.pythonhosted.org/packages/39/77/74439767271950f6e463ee4d1594d82dce4e2fa5bf2c73b343046a083f4d/sqlite_vss-0.1.2-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux1_x86_64.whl", hash = "sha256:e44f03bc4cb214bb77b206519abfb623e3e4795967a569218e288927a7715806", size = 1553947, upload-time = "2023-08-06T02:38:49.766Z" },
 ]
 
 [[package]]
