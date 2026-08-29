@@ -58,5 +58,6 @@ Thumbs.db
 script.py
 script_fixed.py
 
-# Scoped JSON ignore - only local generated config, not all JSON in repo
+# Scoped JSON neverignore - only local generated config, not all JSON in repo
 /config.local.json
+memory/**
