@@ -9,9 +9,11 @@ from rich.markdown import Markdown
 from rich.live import Live
 from rich.panel import Panel
 
+from core import rag
+from core import config as cfg
+
 console = Console()
 MODEL_NAME = os.getenv("CLANKA_MODEL", "clanka")
-MAX_FILE_CHARS = int(os.getenv("CLANKA_MAX_CHARS", 4000))
 
 LOGO = r"""
  [bold cyan]
@@ -32,24 +34,48 @@ def get_sys_info():
     try:
         mem = psutil.virtual_memory()
         return f"{platform.system()} {platform.release()} | {platform.processor()} | {round(mem.total/(1024**3),2)}GB RAM"
-    except:
+    except Exception:
         return "System info unavailable"
+
+
+def _build_memory_context(prompt, source_types=None):
+    """Pulls relevant chunks from RAG and formats them as prompt context.
+    Returns "" if nothing relevant or RAG isn't available yet (no DB, no embed model).
+    """
+    rag_params = cfg.get_rag_params()
+    results = rag.search(prompt, top_k=rag_params["top_k"], source_types=source_types)
+    if not results:
+        return ""
+
+    lines = ["Relevant context from memory:"]
+    for _, doc in results:
+        snippet = doc["content"][: rag_params["max_file_chars"] // max(len(results), 1)]
+        lines.append(f"- ({doc['source_type']}) {doc['file']}: {snippet}")
+    return "\n".join(lines) + "\n\n"
+
 
 # =========================
 # STREAM RESPONSE (OPTIMIZED)
 # =========================
-def stream_response(prompt, quiet=False):
+def stream_response(prompt, quiet=False, persona=None):
     if not quiet:
         console.print(LOGO)
 
+    options = cfg.get_ollama_options()
+    memory_context = _build_memory_context(prompt)
+
+    full_prompt = prompt
     if USE_SYS_CONTEXT:
-        prompt = f"{get_sys_info()}\n\n{prompt}"
+        full_prompt = f"{get_sys_info()}\n\n{full_prompt}"
+    if memory_context:
+        full_prompt = f"{memory_context}{full_prompt}"
 
     try:
         stream = ollama.generate(
             model=MODEL_NAME,
-            prompt=prompt,
-            stream=True
+            prompt=full_prompt,
+            stream=True,
+            options=options,
         )
 
         full = ""
@@ -71,7 +97,6 @@ def stream_response(prompt, quiet=False):
                 full += text
                 buffer += text
 
-                # 🔥 update less frequently
                 if len(buffer) > 120:
                     live.update(Panel(
                         Markdown(full),
@@ -81,7 +106,6 @@ def stream_response(prompt, quiet=False):
                     ))
                     buffer = ""
 
-            # final render
             live.update(Panel(
                 Markdown(full),
                 title=f"[bold green]{MODEL_NAME}[/bold green]",
@@ -89,14 +113,21 @@ def stream_response(prompt, quiet=False):
                 padding=(1, 2)
             ))
 
+        # write path: store this exchange as chat memory (fire-and-forget-ish;
+        # a failed embed just returns None, doesn't break the chat)
+        rag.add_chat_memory(prompt, full, persona=persona)
+
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {e}")
+
 
 # =========================
 # WTF MODE
 # =========================
 def handle_wtf(target=None):
     console.print(LOGO)
+    rag_params = cfg.get_rag_params()
+    max_chars = rag_params["max_file_chars"]
 
     if target:
         path = Path(target)
@@ -106,7 +137,7 @@ def handle_wtf(target=None):
             return
 
         try:
-            content = path.read_text(errors="ignore")[:MAX_FILE_CHARS]
+            content = path.read_text(errors="ignore")[:max_chars]
 
             console.print(f"[dim]Analyzing {target}...[/dim]\n")
 
@@ -149,6 +180,7 @@ Explain:
 
         stream_response(prompt, quiet=True)
 
+
 # =========================
 # PATCH MODE
 # =========================
@@ -167,6 +199,8 @@ def extract_code(text):
 
 def handle_patch(target):
     console.print(LOGO)
+    rag_params = cfg.get_rag_params()
+    max_chars = rag_params["max_file_chars"]
 
     path = Path(target)
 
@@ -175,7 +209,7 @@ def handle_patch(target):
         return
 
     try:
-        content = path.read_text(errors="ignore")[:MAX_FILE_CHARS]
+        content = path.read_text(errors="ignore")[:max_chars]
 
         console.print(f"[dim]Refactoring {target}...[/dim]\n")
 
@@ -185,12 +219,13 @@ Refactor:
 {content}
 """
 
-        res = ollama.generate(model=MODEL_NAME, prompt=prompt)
+        options = cfg.get_ollama_options()
+        res = ollama.generate(model=MODEL_NAME, prompt=prompt, options=options)
         code = extract_code(res.get("response", ""))
 
         try:
             compile(code, "<string>", "exec")
-        except:
+        except Exception:
             console.print("[red]Invalid output from model[/red]")
             return
 

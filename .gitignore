@@ -26,13 +26,18 @@ eggs/
 # uv.lock
 
 # =========================
-# Local Debugging & Testing
-# =========================
-debug.py
-
-# =========================
 # Clanka Specific
 # =========================
+# Local vector DB + memory files - regenerate with `clanka index`,
+# never commit (contains embeddings of local project + chat history).
+memory/
+*.db
+*.db-journal
+*.bak
+
+# Future memory-consolidation staging files (atomic swap pattern)
+new*.md
+
 # Ignore the local Modelfile to prevent overwriting user configs.
 # Make sure Modelfile.example remains tracked.
 Modelfile
@@ -47,8 +52,11 @@ Thumbs.db
 *.swp
 *.swo
 
-# test scripts
-script.py 
+# =========================
+# Test / scratch scripts
+# =========================
+script.py
 script_fixed.py
 
-.json
+# Scoped JSON ignore - only local generated config, not all JSON in repo
+/config.local.json

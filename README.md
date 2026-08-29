@@ -1,6 +1,6 @@
 # ⚡ Clanka
 
-> Terminal-native AI assistant with local inference, clean TUI, and evolving RAG
+> Terminal-native AI assistant with local inference, resource-aware throttling, and persistent memory (RAG)
 
 Clanka is a fast, offline-first CLI tool for interacting with local LLMs using Ollama — built for developers who prefer terminal workflows over bloated GUIs.
 
@@ -13,6 +13,8 @@ Clanka is:
 * 🧠 a **local AI assistant**
 * ⚡ a **low-latency CLI interface**
 * 📂 a **code-aware analyzer**
+* 🧵 a **resource-aware assistant** (you set the % of system resources it's allowed to use)
+* 💾 a **persistent-memory assistant** (remembers past conversations across sessions)
 * 🎨 a **terminal-native UI experiment (but actually usable)**
 
 Clanka is NOT:
@@ -34,6 +36,7 @@ clanka "explain this code"
 * Runs fully local (via Ollama)
 * No API keys
 * Streaming responses
+* Automatically pulls relevant context from memory (past chats + indexed code/docs)
 
 ---
 
@@ -59,6 +62,34 @@ clanka patch file.py
 * Refactors code using AI
 * **Never overwrites original file**
 * Creates: `file_fixed.py`
+
+---
+
+### 🧵 Resource Control
+
+```bash
+clanka config --mem 30    # cap Clanka at ~30% of system resources
+clanka config              # view current config
+```
+
+* One knob (`mem_percent`, default 50) controls context window size, thread count, and how much memory context gets pulled per query
+* Fixes the "5-10 min wait while your PC lags" problem — lower it when multitasking, raise it when Clanka has the machine to itself
+* Persists to `~/.clanka/config.json`
+
+---
+
+### 💾 Persistent Memory (RAG)
+
+```bash
+clanka index .        # (re)build the code/doc index
+```
+
+* Backed by `sqlite-vec` for fast local vector search
+* Three kinds of memory, tracked separately:
+  * `code` — your project's source files
+  * `doc` — manuals/README/markdown docs
+  * `chat` — conversation history, written automatically after every exchange
+* Rebuilding the index (`clanka index`) refreshes `code`/`doc` **without ever touching `chat` memory** — your conversation history survives project re-indexing
 
 ---
 
@@ -93,8 +124,9 @@ Checks:
 * Python
 * Ollama
 * Local LLMs (Gemma etc.)
-* rich (TUI)
-* psutil
+* `sqlite-vec` (vector search)
+* `rich` (TUI)
+* `psutil`
 
 ---
 
@@ -103,7 +135,7 @@ Checks:
 ```bash
 git clone https://github.com/Vicky404-git/Clanka.git
 cd Clanka
-pip install -e .
+uv sync
 ```
 
 ---
@@ -113,6 +145,7 @@ pip install -e .
 ```bash
 ollama create clanka -f Modelfile
 ollama list
+ollama pull nomic-embed-text   # required for RAG/embeddings
 ```
 
 ---
@@ -124,6 +157,9 @@ clanka "your prompt"
 clanka wtf file.py
 clanka wtf
 clanka patch file.py
+clanka index .
+clanka config
+clanka config --mem 30
 clanka debug
 ```
 
@@ -133,11 +169,13 @@ clanka debug
 
 ```
 core/
-  ├── clanka.py     # core engine + UI
-  ├── debug.py      # diagnostics
+  ├── clanka.py     # core engine + UI (chat, wtf, patch)
+  ├── config.py     # resource control (mem_percent -> Ollama/RAG params)
+  ├── rag.py        # sqlite-vec RAG engine (code/doc/chat memory)
+  └── debug.py      # pre-flight diagnostics
 
 memory/
-  └── clanka_memory.json  # (future RAG storage)
+  └── clanka.db     # local vector store (gitignored, regenerate with `clanka index`)
 
 main.py             # CLI entrypoint
 Modelfile           # model config
@@ -150,19 +188,27 @@ Modelfile           # model config
 If upgrading from older versions:
 
 ```bash
+rm -rf memory/                          # old schema is incompatible, will error
 ollama rm gemma4:e4b
 ollama rm clanka
 ollama create clanka -f Modelfile
 ```
 
-Prevents stale model weights slowing down inference.
+If inference fails with a "requires more system memory than is available" error, lower your resource budget:
+
+```bash
+clanka config --mem 20
+```
 
 ---
 
 ## 🔮 Roadmap
 
-* Persistent memory (RAG)
+* ✅ Persistent memory (RAG)
+* ✅ Resource control (`mem_percent`)
 * Multi-persona system (linux / coding / AI / trading)
+* Weekly memory consolidation (importance scoring + summarization, atomic file swap)
+* DaemonV integration (offline, decoupled core)
 * Better context chunking
 * Faster streaming modes
 
@@ -183,6 +229,7 @@ Clanka focuses on:
 * minimal dependencies
 * terminal workflows
 * fast iteration
+* respecting your machine's resources
 
 ---
 

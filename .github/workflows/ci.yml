@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  sanity-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Syntax check all Python files
+        run: |
+          uv run python -m py_compile main.py
+          uv run python -m py_compile core/*.py
+
+      - name: Import smoke test (pure-logic modules)
+        # core.rag / core.config have zero CLI/console dependencies by design -
+        # if these fail to import, something broke the core/CLI separation.
+        run: |
+          uv run python -c "import core.rag; import core.config; print('core modules import cleanly')"
+
+      - name: Config round-trip smoke test
+        # Doesn't need Ollama/a live daemon - just checks the config layer
+        # behaves (load defaults, validate, persist) without touching the
+        # developer's real ~/.clanka config.
+        run: |
+          uv run python -c "
+          import core.config as cfg
+          cfg.CONFIG_DIR = __import__('pathlib').Path('/tmp/clanka_ci_home/.clanka')
+          cfg.CONFIG_PATH = cfg.CONFIG_DIR / 'config.json'
+          c = cfg.load_config()
+          assert c['mem_percent'] == 50
+          cfg.set_mem_percent(25)
+          assert cfg.load_config()['mem_percent'] == 25
+          try:
+              cfg.set_mem_percent(999)
+              raise SystemExit('validation did not reject out-of-range percent')
+          except ValueError:
+              pass
+          print('config round-trip OK')
+          "
